@@ -19,6 +19,10 @@ const MatchSchema = z.object({
   round: z.string().optional().or(z.literal("")),
   matchStatus: z.nativeEnum(MatchStatus).default(MatchStatus.SCHEDULED),
   status: z.nativeEnum(Status).default(Status.DRAFT),
+  // ── Forfeit ──
+  forfeit: z.string().optional().transform(v => v === "on" || v === "true"),
+  forfeitTeamId: z.string().optional().or(z.literal("")),
+  forfeitReason: z.string().optional().or(z.literal("")),
 })
 
 export async function createMatch(prevState: any, formData: FormData) {
@@ -26,7 +30,7 @@ export async function createMatch(prevState: any, formData: FormData) {
   if (!session) return { error: "No autorizado" }
 
   const data = Object.fromEntries(formData.entries())
-  
+
   if (data.homeTeamId === data.awayTeamId) {
     return { error: "Un equipo no puede jugar contra sí mismo" }
   }
@@ -37,18 +41,23 @@ export async function createMatch(prevState: any, formData: FormData) {
     return { error: "Datos inválidos: " + validatedFields.error.errors[0].message }
   }
 
+  const { forfeit, forfeitTeamId, forfeitReason, ...rest } = validatedFields.data
+
   try {
     const match = await prisma.match.create({
       data: {
-        categoryId: validatedFields.data.categoryId,
-        homeTeamId: validatedFields.data.homeTeamId,
-        awayTeamId: validatedFields.data.awayTeamId,
-        homeScore: validatedFields.data.homeScore,
-        awayScore: validatedFields.data.awayScore,
-        matchDate: validatedFields.data.matchDate,
-        round: validatedFields.data.round || null,
-        matchStatus: validatedFields.data.matchStatus,
-        status: validatedFields.data.status,
+        categoryId: rest.categoryId,
+        homeTeamId: rest.homeTeamId,
+        awayTeamId: rest.awayTeamId,
+        homeScore: rest.homeScore,
+        awayScore: rest.awayScore,
+        matchDate: rest.matchDate,
+        round: rest.round || null,
+        matchStatus: rest.matchStatus,
+        status: rest.status,
+        forfeit: forfeit ?? false,
+        forfeitTeamId: forfeit && forfeitTeamId ? forfeitTeamId : null,
+        forfeitReason: forfeit && forfeitReason ? forfeitReason : null,
       }
     })
 
@@ -70,7 +79,7 @@ export async function updateMatch(id: string, prevState: any, formData: FormData
   if (!session) return { error: "No autorizado" }
 
   const data = Object.fromEntries(formData.entries())
-  
+
   if (data.homeTeamId === data.awayTeamId) {
     return { error: "Un equipo no puede jugar contra sí mismo" }
   }
@@ -81,23 +90,27 @@ export async function updateMatch(id: string, prevState: any, formData: FormData
     return { error: "Datos inválidos: " + validatedFields.error.errors[0].message }
   }
 
+  const { forfeit, forfeitTeamId, forfeitReason, ...rest } = validatedFields.data
+
   try {
     const match = await prisma.match.update({
       where: { id },
       data: {
-        categoryId: validatedFields.data.categoryId,
-        homeTeamId: validatedFields.data.homeTeamId,
-        awayTeamId: validatedFields.data.awayTeamId,
-        homeScore: validatedFields.data.homeScore,
-        awayScore: validatedFields.data.awayScore,
-        matchDate: validatedFields.data.matchDate,
-        round: validatedFields.data.round || null,
-        matchStatus: validatedFields.data.matchStatus,
-        status: validatedFields.data.status,
+        categoryId: rest.categoryId,
+        homeTeamId: rest.homeTeamId,
+        awayTeamId: rest.awayTeamId,
+        homeScore: rest.homeScore,
+        awayScore: rest.awayScore,
+        matchDate: rest.matchDate,
+        round: rest.round || null,
+        matchStatus: rest.matchStatus,
+        status: rest.status,
+        forfeit: forfeit ?? false,
+        forfeitTeamId: forfeit && forfeitTeamId ? forfeitTeamId : null,
+        forfeitReason: forfeit && forfeitReason ? forfeitReason : null,
       }
     })
 
-    // Siempre recalcular la clasificación en caso de que un partido se modifique o se borren los goles
     await recalculateStandings(match.categoryId)
 
   } catch (error: any) {
@@ -133,12 +146,11 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
   try {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
-    
+
     const workbook = XLSX.read(buffer, { type: "buffer" })
     const firstSheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[firstSheetName]
-    
-    // raw: false asegura que fechas y números se conviertan a strings legibles
+
     const data = XLSX.utils.sheet_to_json<any>(worksheet, { raw: false })
 
     let successCount = 0
@@ -160,7 +172,6 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
         continue
       }
 
-      // Buscar categoría
       const category = await prisma.category.findFirst({
         where: { name: { equals: catName, mode: 'insensitive' } }
       })
@@ -171,7 +182,6 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
         continue
       }
 
-      // Buscar equipos dentro de la categoría
       const homeTeam = await prisma.team.findFirst({
         where: { categoryId: category.id, name: { equals: homeName, mode: 'insensitive' } }
       })
@@ -186,20 +196,17 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
         continue
       }
 
-      // Procesar fecha y hora
       let matchDate: Date | null = null
       if (dateStr) {
-        // Detectar formato DD/MM/YYYY y convertirlo
         const ddmmyyyy = String(dateStr).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/)
         if (ddmmyyyy) {
           const [, day, month, year] = ddmmyyyy
           const timepart = timeStr ? `T${String(timeStr).trim()}:00` : 'T00:00:00'
-          const parsedDate = new Date(`${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}${timepart}`)
+          const parsedDate = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}${timepart}`)
           if (!isNaN(parsedDate.getTime())) {
             matchDate = parsedDate
           }
         } else {
-          // Intentar parseo directo (YYYY-MM-DD u otros formatos)
           const dateTimeString = timeStr ? `${dateStr} ${timeStr}` : dateStr
           const parsedDate = new Date(dateTimeString)
           if (!isNaN(parsedDate.getTime())) {
@@ -208,7 +215,6 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
         }
       }
 
-      // Estado del partido (opcional) y goles (opcional)
       const statusStr = row["Estado"] || row["Status"] || row["matchStatus"];
       const matchStatus: typeof MatchStatus[keyof typeof MatchStatus] =
         statusStr && Object.values(MatchStatus).includes(statusStr as any)
@@ -235,7 +241,6 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
           }
         })
         successCount++;
-        // Si el partido está terminado, recalcular la tabla de posiciones
         if (matchStatus === MatchStatus.FINISHED) {
           await recalculateStandings(category.id);
         }
@@ -248,7 +253,7 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
     revalidatePath("/admin/partidos")
     revalidatePath("/")
 
-    return { 
+    return {
       success: `Se importaron ${successCount} partidos correctamente. ${errorCount > 0 ? `Hubo ${errorCount} errores.` : ''}`,
       errors: errors.slice(0, 10)
     }

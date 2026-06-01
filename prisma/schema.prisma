@@ -26,16 +26,16 @@ enum Role {
 }
 
 model Category {
-  id         String     @id @default(uuid())
-  name       String
-  slug       String     @unique
-  sport      String
-  logoUrl    String?
-  status     Status     @default(DRAFT)
-  teams      Team[]
-  matches    Match[]
-  standings  Standing[]
-  createdAt  DateTime   @default(now())
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  sport     String
+  logoUrl   String?
+  status    Status     @default(DRAFT)
+  teams     Team[]
+  matches   Match[]
+  standings Standing[]
+  createdAt DateTime   @default(now())
 }
 
 model Team {
@@ -54,36 +54,39 @@ model Team {
 }
 
 model Match {
-  id           String      @id @default(uuid())
-  categoryId   String
-  homeTeamId   String
-  awayTeamId   String
-  homeScore    Int?
-  awayScore    Int?
-  matchDate    DateTime?
-  round        String?
-  matchStatus  MatchStatus @default(SCHEDULED)
-  status       Status      @default(DRAFT)
-  category     Category    @relation(fields: [categoryId], references: [id])
-  homeTeam     Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam     Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
-  createdAt    DateTime    @default(now())
+  id            String      @id @default(uuid())
+  categoryId    String
+  homeTeamId    String
+  awayTeamId    String
+  homeScore     Int?
+  awayScore     Int?
+  matchDate     DateTime?
+  round         String?
+  matchStatus   MatchStatus @default(SCHEDULED)
+  status        Status      @default(DRAFT)
+  category      Category    @relation(fields: [categoryId], references: [id])
+  homeTeam      Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam      Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  createdAt     DateTime    @default(now())
+  forfeit       Boolean     @default(false)
+  forfeitReason String? // "Incomparecencia", "Alineación indebida", etc.
+  forfeitTeamId String? // qué equipo pierde (el sancionado)
 }
 
 model Standing {
-  id             String   @id @default(uuid())
-  categoryId     String
-  teamId         String
-  played         Int      @default(0)
-  won            Int      @default(0)
-  drawn          Int      @default(0)
-  lost           Int      @default(0)
-  goalsFor       Int      @default(0)
-  goalsAgainst   Int      @default(0)
-  points         Int      @default(0)
-  category       Category @relation(fields: [categoryId], references: [id])
-  team           Team     @relation(fields: [teamId], references: [id])
-  updatedAt      DateTime @updatedAt
+  id           String   @id @default(uuid())
+  categoryId   String
+  teamId       String
+  played       Int      @default(0)
+  won          Int      @default(0)
+  drawn        Int      @default(0)
+  lost         Int      @default(0)
+  goalsFor     Int      @default(0)
+  goalsAgainst Int      @default(0)
+  points       Int      @default(0)
+  category     Category @relation(fields: [categoryId], references: [id])
+  team         Team     @relation(fields: [teamId], references: [id])
+  updatedAt    DateTime @updatedAt
 
   @@unique([categoryId, teamId])
 }

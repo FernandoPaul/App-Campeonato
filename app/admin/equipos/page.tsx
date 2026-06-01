@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { Plus, Edit, Trash2, CheckCircle2, Circle } from "lucide-react"
 import { toggleTeamStatus, deleteTeam } from "./actions"
+import TeamExcelUploadButton from "@/components/admin/TeamExcelUploadButton"
 
 export default async function EquiposPage({
   searchParams,
@@ -38,13 +39,17 @@ export default async function EquiposPage({
           <h2 className="text-2xl font-bold tracking-tight text-white">Equipos</h2>
           <p className="text-zinc-400">Gestiona los equipos que participan en los torneos.</p>
         </div>
-        <Link
-          href="/admin/equipos/nuevo"
-          className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo Equipo
-        </Link>
+        {/* ── Botones de acción ── */}
+        <div className="flex items-center space-x-3">
+          <TeamExcelUploadButton />
+          <Link
+            href="/admin/equipos/nuevo"
+            className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Equipo
+          </Link>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -119,13 +124,12 @@ export default async function EquiposPage({
                         "use server"
                         await toggleTeamStatus(equipo.id, equipo.status)
                       }}>
-                        <button 
-                          type="submit" 
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors hover:opacity-80 ${
-                            equipo.status === 'PUBLISHED' 
-                              ? 'bg-emerald-500/10 text-emerald-400' 
+                        <button
+                          type="submit"
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors hover:opacity-80 ${equipo.status === 'PUBLISHED'
+                              ? 'bg-emerald-500/10 text-emerald-400'
                               : 'bg-zinc-800 text-zinc-400'
-                          }`}
+                            }`}
                         >
                           {equipo.status === 'PUBLISHED' ? (
                             <><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Publicado</>

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react"
 import { createMatch, updateMatch } from "@/app/admin/partidos/actions"
 import Link from "next/link"
-import { Save, ArrowLeft } from "lucide-react"
+import { Save, ArrowLeft, AlertTriangle } from "lucide-react"
 import { Status, MatchStatus, Category, Team } from "@prisma/client"
 import { format } from "date-fns"
 
@@ -21,18 +21,21 @@ type MatchFormProps = {
     round: string | null
     matchStatus: MatchStatus
     status: Status
+    forfeit: boolean
+    forfeitTeamId: string | null
+    forfeitReason: string | null
   }
 }
 
 export default function MatchForm({ categories, teams, initialData }: MatchFormProps) {
   const isEditing = !!initialData
-  
+
   const [selectedCategory, setSelectedCategory] = useState<string>(initialData?.categoryId || "")
-  
-  // Filtrar equipos basados en la categoría seleccionada
+  const [isForfeit, setIsForfeit] = useState<boolean>(initialData?.forfeit ?? false)
+
   const filteredTeams = teams.filter(t => t.categoryId === selectedCategory)
 
-  const action = isEditing 
+  const action = isEditing
     ? updateMatch.bind(null, initialData.id)
     : createMatch
 
@@ -104,7 +107,8 @@ export default function MatchForm({ categories, teams, initialData }: MatchFormP
                 name="homeScore"
                 min="0"
                 defaultValue={initialData?.homeScore ?? ""}
-                className="block w-full rounded-md bg-zinc-800 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2"
+                disabled={isForfeit}
+                className="block w-full rounded-md bg-zinc-800 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2 disabled:opacity-30"
                 placeholder="-"
               />
             </div>
@@ -131,7 +135,8 @@ export default function MatchForm({ categories, teams, initialData }: MatchFormP
                 name="awayScore"
                 min="0"
                 defaultValue={initialData?.awayScore ?? ""}
-                className="block w-full rounded-md bg-zinc-800 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2"
+                disabled={isForfeit}
+                className="block w-full rounded-md bg-zinc-800 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2 disabled:opacity-30"
                 placeholder="-"
               />
             </div>
@@ -177,7 +182,6 @@ export default function MatchForm({ categories, teams, initialData }: MatchFormP
             </select>
           </div>
 
-          {/* Visibilidad */}
           <div className="sm:col-span-2">
             <label htmlFor="status" className="block text-sm font-medium text-zinc-300">Visibilidad Pública</label>
             <select
@@ -190,6 +194,77 @@ export default function MatchForm({ categories, teams, initialData }: MatchFormP
               <option value="PUBLISHED">Publicado (Visible)</option>
             </select>
           </div>
+        </div>
+
+        {/* ── SECCIÓN FORFEIT ── */}
+        <div className={`rounded-xl border p-5 space-y-4 transition-colors ${isForfeit
+            ? "border-orange-500/40 bg-orange-500/5"
+            : "border-zinc-800 bg-zinc-950/30"
+          }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${isForfeit ? "text-orange-400" : "text-zinc-600"}`} />
+              <div>
+                <p className={`text-sm font-semibold ${isForfeit ? "text-orange-300" : "text-zinc-300"}`}>
+                  Derrota por incomparecencia o sanción
+                </p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  El equipo sancionado pierde 0–3 en clasificación (los goles reales se ignoran)
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="forfeit"
+                checked={isForfeit}
+                onChange={(e) => setIsForfeit(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+            </label>
+          </div>
+
+          {isForfeit && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  Equipo sancionado *
+                </label>
+                <select
+                  name="forfeitTeamId"
+                  defaultValue={initialData?.forfeitTeamId || ""}
+                  required={isForfeit}
+                  disabled={!selectedCategory}
+                  className="block w-full rounded-md bg-zinc-800 border-zinc-700 text-white focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-4 py-2 disabled:opacity-50"
+                >
+                  <option value="">Seleccionar equipo sancionado</option>
+                  {filteredTeams.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-zinc-600">Este equipo recibirá la derrota en la tabla</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  Motivo de la sanción
+                </label>
+                <select
+                  name="forfeitReason"
+                  defaultValue={initialData?.forfeitReason || ""}
+                  className="block w-full rounded-md bg-zinc-800 border-zinc-700 text-white focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-4 py-2"
+                >
+                  <option value="">Sin especificar</option>
+                  <option value="Incomparecencia">Incomparecencia</option>
+                  <option value="Alineación indebida">Alineación indebida</option>
+                  <option value="Sanción disciplinaria">Sanción disciplinaria</option>
+                  <option value="Retirada del partido">Retirada del partido</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="pt-4 border-t border-zinc-800 flex justify-end">

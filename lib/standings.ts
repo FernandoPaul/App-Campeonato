@@ -35,35 +35,62 @@ export async function recalculateStandings(categoryId: string) {
 
   // 3. Calcular estadísticas
   for (const match of matches) {
-    if (match.homeScore === null || match.awayScore === null) continue
-
     const homeStats = statsMap.get(match.homeTeamId)
     const awayStats = statsMap.get(match.awayTeamId)
 
-    if (homeStats && awayStats) {
+    if (!homeStats || !awayStats) continue
+
+    // ── FORFEIT: partido perdido por incomparecencia o sanción ──
+    if (match.forfeit && match.forfeitTeamId) {
+      const isHomeForfeit = match.forfeitTeamId === match.homeTeamId
+
       homeStats.played++
       awayStats.played++
 
-      homeStats.goalsFor += match.homeScore
-      homeStats.goalsAgainst += match.awayScore
-
-      awayStats.goalsFor += match.awayScore
-      awayStats.goalsAgainst += match.homeScore
-
-      if (match.homeScore > match.awayScore) {
-        homeStats.won++
-        homeStats.points += 3
-        awayStats.lost++
-      } else if (match.homeScore < match.awayScore) {
+      if (isHomeForfeit) {
+        // Local pierde — visitante gana 3-0 (convención FIFA)
         awayStats.won++
         awayStats.points += 3
+        awayStats.goalsFor += 3
         homeStats.lost++
+        homeStats.goalsAgainst += 3
       } else {
-        homeStats.drawn++
-        awayStats.drawn++
-        homeStats.points += 1
-        awayStats.points += 1
+        // Visitante pierde — local gana 3-0
+        homeStats.won++
+        homeStats.points += 3
+        homeStats.goalsFor += 3
+        awayStats.lost++
+        awayStats.goalsAgainst += 3
       }
+
+      continue // no procesar marcador real
+    }
+
+    // ── PARTIDO NORMAL ──
+    if (match.homeScore === null || match.awayScore === null) continue
+
+    homeStats.played++
+    awayStats.played++
+
+    homeStats.goalsFor += match.homeScore
+    homeStats.goalsAgainst += match.awayScore
+
+    awayStats.goalsFor += match.awayScore
+    awayStats.goalsAgainst += match.homeScore
+
+    if (match.homeScore > match.awayScore) {
+      homeStats.won++
+      homeStats.points += 3
+      awayStats.lost++
+    } else if (match.homeScore < match.awayScore) {
+      awayStats.won++
+      awayStats.points += 3
+      homeStats.lost++
+    } else {
+      homeStats.drawn++
+      awayStats.drawn++
+      homeStats.points += 1
+      awayStats.points += 1
     }
   }
 
