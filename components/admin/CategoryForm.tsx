@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
-import { createCategory, updateCategory } from "@/app/admin/categorias/actions"
+import { createCategory, updateCategory } from "@/app/admin/competiciones/actions"
 import Link from "next/link"
 import { Save, ArrowLeft } from "lucide-react"
 import { Status } from "@prisma/client"
@@ -31,15 +31,15 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
     <div className="max-w-2xl">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/admin/categorias" className="text-zinc-400 hover:text-white transition-colors">
+          <Link href="/admin/competiciones" className="text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div>
             <h2 className="text-2xl font-bold text-white">
-              {isEditing ? "Editar Categoría" : "Nueva Categoría"}
+              {isEditing ? "Editar Competición" : "Nueva Competición"}
             </h2>
             <p className="text-zinc-400">
-              {isEditing ? "Actualiza los datos de esta categoría" : "Crea una nueva categoría para agrupar equipos y partidos"}
+              {isEditing ? "Actualiza los datos de esta competición" : "Crea una nueva competición para agrupar equipos y partidos"}
             </p>
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                {isEditing ? "Guardar Cambios" : "Crear Categoría"}
+                {isEditing ? "Guardar Cambios" : "Crear Competición"}
               </>
             )}
           </button>

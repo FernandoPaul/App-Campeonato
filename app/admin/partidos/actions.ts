@@ -10,7 +10,7 @@ import { recalculateStandings } from "@/lib/standings"
 import * as XLSX from "xlsx"
 
 const MatchSchema = z.object({
-  categoryId: z.string().uuid("Selecciona una categoría válida"),
+  categoryId: z.string().uuid("Selecciona una competición válida"),
   homeTeamId: z.string().uuid("Selecciona un equipo local válido"),
   awayTeamId: z.string().uuid("Selecciona un equipo visitante válido"),
   homeScore: z.string().optional().transform(v => v === "" ? null : Number(v)),
@@ -38,7 +38,7 @@ export async function createMatch(prevState: any, formData: FormData) {
   const validatedFields = MatchSchema.safeParse(data)
 
   if (!validatedFields.success) {
-    return { error: "Datos inválidos: " + validatedFields.error.errors[0].message }
+    return { error: "Datos inválidos: " + (validatedFields.error as any).errors[0].message }
   }
 
   const { forfeit, forfeitTeamId, forfeitReason, ...rest } = validatedFields.data
@@ -87,7 +87,7 @@ export async function updateMatch(id: string, prevState: any, formData: FormData
   const validatedFields = MatchSchema.safeParse(data)
 
   if (!validatedFields.success) {
-    return { error: "Datos inválidos: " + validatedFields.error.errors[0].message }
+    return { error: "Datos inválidos: " + (validatedFields.error as any).errors[0].message }
   }
 
   const { forfeit, forfeitTeamId, forfeitReason, ...rest } = validatedFields.data
@@ -159,16 +159,16 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i]
-      const catName = row["Categoria"] || row["Categoría"] || row["categoria"]
-      const homeName = row["Equipo Local"] || row["Local"] || row["home"]
-      const awayName = row["Equipo Visitante"] || row["Visitante"] || row["away"]
+      const catName = row["Categoría"] || row["Categoria"] || row["categoria"]
+      const homeName = row["Local"] || row["Equipo Local"] || row["home"]
+      const awayName = row["Visitante"] || row["Equipo Visitante"] || row["away"]
       const dateStr = row["Fecha"] || row["fecha"]
       const timeStr = row["Hora"] || row["hora"]
       const roundStr = row["Jornada"] || row["jornada"] || row["Fase"] || row["fase"]
 
       if (!catName || !homeName || !awayName) {
         errorCount++
-        errors.push(`Fila ${i + 2}: Faltan datos requeridos (Categoría o Equipos).`)
+        errors.push(`Fila ${i + 2}: Faltan datos requeridos (Competición o Equipos).`)
         continue
       }
 
@@ -178,7 +178,7 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
 
       if (!category) {
         errorCount++
-        errors.push(`Fila ${i + 2}: Categoría '${catName}' no encontrada.`)
+        errors.push(`Fila ${i + 2}: Competición '${catName}' no encontrada.`)
         continue
       }
 
@@ -192,7 +192,7 @@ export async function uploadMatchesFromExcel(prevState: any, formData: FormData)
 
       if (!homeTeam || !awayTeam) {
         errorCount++
-        errors.push(`Fila ${i + 2}: Equipo Local o Visitante no encontrado en la categoría.`)
+        errors.push(`Fila ${i + 2}: Equipo Local o Visitante no encontrado en la competición.`)
         continue
       }
 

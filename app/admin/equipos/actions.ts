@@ -9,7 +9,7 @@ import { Status } from "@prisma/client"
 import * as XLSX from "xlsx"
 
 const TeamSchema = z.object({
-  categoryId: z.string().uuid("Selecciona una categoría válida"),
+  categoryId: z.string().uuid("Selecciona una competición válida"),
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   slug: z.string().min(2, "El slug debe tener al menos 2 caracteres").regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones"),
   city: z.string().optional().or(z.literal("")),
@@ -25,7 +25,7 @@ export async function createTeam(prevState: any, formData: FormData) {
   const validatedFields = TeamSchema.safeParse(data)
 
   if (!validatedFields.success) {
-    return { error: validatedFields.error.errors[0].message }
+    return { error: (validatedFields.error as any).errors[0].message }
   }
 
   try {
@@ -56,7 +56,7 @@ export async function updateTeam(id: string, prevState: any, formData: FormData)
   const validatedFields = TeamSchema.safeParse(data)
 
   if (!validatedFields.success) {
-    return { error: validatedFields.error.errors[0].message }
+    return { error: (validatedFields.error as any).errors[0].message }
   }
 
   try {
@@ -146,7 +146,7 @@ export async function uploadTeamsFromExcel(prevState: any, formData: FormData) {
       // Validación de campos obligatorios
       if (!catName || !teamName || !slugRaw) {
         errorCount++
-        errors.push(`Fila ${i + 2}: Faltan campos obligatorios (Categoria, Nombre o Slug).`)
+        errors.push(`Fila ${i + 2}: Faltan campos obligatorios (Competición, Nombre o Slug).`)
         continue
       }
 
@@ -159,14 +159,14 @@ export async function uploadTeamsFromExcel(prevState: any, formData: FormData) {
         continue
       }
 
-      // Buscar categoría (insensible a mayúsculas)
+      // Buscar competición (insensible a mayúsculas)
       const category = await prisma.category.findFirst({
         where: { name: { equals: String(catName).trim(), mode: "insensitive" } },
       })
 
       if (!category) {
         errorCount++
-        errors.push(`Fila ${i + 2}: Categoría '${catName}' no encontrada en el sistema.`)
+        errors.push(`Fila ${i + 2}: Competición '${catName}' no encontrada en el sistema.`)
         continue
       }
 

@@ -4,8 +4,8 @@ import { format } from "date-fns"
 import { Plus, Edit, Trash2, CheckCircle2, Circle } from "lucide-react"
 import { toggleCategoryStatus, deleteCategory } from "./actions"
 
-export default async function CategoriasPage() {
-  const categorias = await prisma.category.findMany({
+export default async function CompeticionesPage() {
+  const competiciones = await prisma.category.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
       _count: {
@@ -18,15 +18,15 @@ export default async function CategoriasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">Categorías</h2>
-          <p className="text-zinc-400">Gestiona las ligas, torneos y categorías.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-white">Competiciones</h2>
+          <p className="text-zinc-400">Gestiona las ligas, torneos y competiciones.</p>
         </div>
         <Link
-          href="/admin/categorias/nueva"
+          href="/admin/competiciones/nueva"
           className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Nueva Categoría
+          Nueva Competición
         </Link>
       </div>
 
@@ -44,46 +44,46 @@ export default async function CategoriasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800 bg-zinc-900">
-              {categorias.map((categoria) => (
-                <tr key={categoria.id} className="hover:bg-zinc-800/50 transition-colors">
+              {competiciones.map((comp) => (
+                <tr key={comp.id} className="hover:bg-zinc-800/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      {categoria.logoUrl ? (
-                        <img src={categoria.logoUrl} alt="" className="w-8 h-8 rounded-full bg-zinc-800 object-cover mr-3" />
+                      {comp.logoUrl ? (
+                        <img src={comp.logoUrl} alt="" className="w-8 h-8 rounded-full bg-zinc-800 object-cover mr-3" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500 mr-3 border border-zinc-700">
-                          {categoria.name.substring(0, 2).toUpperCase()}
+                          {comp.name.substring(0, 2).toUpperCase()}
                         </div>
                       )}
                       <div>
-                        <div className="text-sm font-medium text-white">{categoria.name}</div>
-                        <div className="text-xs text-zinc-500">/{categoria.slug}</div>
+                        <div className="text-sm font-medium text-white">{comp.name}</div>
+                        <div className="text-xs text-zinc-500">/{comp.slug}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
-                    {categoria.sport}
+                    {comp.sport}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-zinc-300 font-medium">
-                    {categoria._count.teams}
+                    {comp._count.teams}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-zinc-300 font-medium">
-                    {categoria._count.matches}
+                    {comp._count.matches}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <form action={async () => {
                       "use server"
-                      await toggleCategoryStatus(categoria.id, categoria.status)
+                      await toggleCategoryStatus(comp.id, comp.status)
                     }}>
                       <button 
                         type="submit" 
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors hover:opacity-80 ${
-                          categoria.status === 'PUBLISHED' 
+                          comp.status === 'PUBLISHED' 
                             ? 'bg-emerald-500/10 text-emerald-400' 
                             : 'bg-zinc-800 text-zinc-400'
                         }`}
                       >
-                        {categoria.status === 'PUBLISHED' ? (
+                        {comp.status === 'PUBLISHED' ? (
                           <><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Publicado</>
                         ) : (
                           <><Circle className="w-3.5 h-3.5 mr-1" /> Borrador</>
@@ -93,25 +93,25 @@ export default async function CategoriasPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-3 items-center">
-                      <Link href={`/admin/categorias/${categoria.id}/editar`} className="text-blue-400 hover:text-blue-300">
+                      <Link href={`/admin/competiciones/${comp.id}/editar`} className="text-blue-400 hover:text-blue-300">
                         <Edit className="w-4 h-4" />
                       </Link>
                       <form action={async () => {
                         "use server"
-                        await deleteCategory(categoria.id)
+                        await deleteCategory(comp.id)
                       }}>
-                        <button type="submit" className="text-red-400 hover:text-red-300" title="Eliminar" disabled={categoria._count.teams > 0 || categoria._count.matches > 0}>
-                          <Trash2 className={`w-4 h-4 ${categoria._count.teams > 0 || categoria._count.matches > 0 ? 'opacity-30 cursor-not-allowed' : ''}`} />
+                        <button type="submit" className="text-red-400 hover:text-red-300" title="Eliminar" disabled={comp._count.teams > 0 || comp._count.matches > 0}>
+                          <Trash2 className={`w-4 h-4 ${comp._count.teams > 0 || comp._count.matches > 0 ? 'opacity-30 cursor-not-allowed' : ''}`} />
                         </button>
                       </form>
                     </div>
                   </td>
                 </tr>
               ))}
-              {categorias.length === 0 && (
+              {competiciones.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 text-sm">
-                    No hay categorías creadas todavía.
+                    No hay competiciones creadas todavía.
                   </td>
                 </tr>
               )}

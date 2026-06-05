@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { format } from "date-fns"
-import { es } from "date-fns/locale"
-import { Edit, Trash2, CalendarIcon } from "lucide-react"
+import { Edit, Trash2, CalendarIcon, FileText } from "lucide-react"
 import ExcelUploadButton from "@/components/admin/ExcelUploadButton"
 
 export default async function PartidosPage({
@@ -10,7 +9,7 @@ export default async function PartidosPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const sParams = await searchParams;
+  const sParams = await searchParams
   const page = Number(sParams.page) || 1
   const categoryId = sParams.categoryId as string | undefined
   const status = sParams.status as string | undefined
@@ -32,13 +31,14 @@ export default async function PartidosPage({
         homeTeam: true,
         awayTeam: true,
         category: true,
+        _count: { select: { events: true } },
       },
-      orderBy: { matchDate: 'desc' },
+      orderBy: { matchDate: "desc" },
       skip,
       take,
     }),
     prisma.match.count({ where }),
-    prisma.category.findMany()
+    prisma.category.findMany(),
   ])
 
   const totalPages = Math.ceil(total / take)
@@ -67,14 +67,24 @@ export default async function PartidosPage({
         <form className="flex flex-wrap gap-4 flex-1">
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1">Categoría</label>
-            <select name="categoryId" defaultValue={categoryId || ""} className="bg-zinc-800 border-zinc-700 rounded-md text-sm text-white px-3 py-2">
+            <select
+              name="categoryId"
+              defaultValue={categoryId || ""}
+              className="bg-zinc-800 border-zinc-700 rounded-md text-sm text-white px-3 py-2"
+            >
               <option value="">Todas</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1">Estado Partido</label>
-            <select name="matchStatus" defaultValue={matchStatus || ""} className="bg-zinc-800 border-zinc-700 rounded-md text-sm text-white px-3 py-2">
+            <select
+              name="matchStatus"
+              defaultValue={matchStatus || ""}
+              className="bg-zinc-800 border-zinc-700 rounded-md text-sm text-white px-3 py-2"
+            >
               <option value="">Todos</option>
               <option value="SCHEDULED">Programado</option>
               <option value="LIVE">En Vivo</option>
@@ -84,14 +94,21 @@ export default async function PartidosPage({
           </div>
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1">Visibilidad</label>
-            <select name="status" defaultValue={status || ""} className="bg-zinc-800 border-zinc-700 rounded-md text-sm text-white px-3 py-2">
+            <select
+              name="status"
+              defaultValue={status || ""}
+              className="bg-zinc-800 border-zinc-700 rounded-md text-sm text-white px-3 py-2"
+            >
               <option value="">Todos</option>
               <option value="PUBLISHED">Publicado</option>
               <option value="DRAFT">Borrador</option>
             </select>
           </div>
           <div className="flex-1" />
-          <button type="submit" className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+          <button
+            type="submit"
+            className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
             Filtrar
           </button>
         </form>
@@ -107,61 +124,94 @@ export default async function PartidosPage({
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Categoría</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Partido</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase tracking-wider">Resultado</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase tracking-wider">Jornada/Fase</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase tracking-wider">Jornada</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase tracking-wider">Estado</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase tracking-wider">Visibilidad</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800 bg-zinc-900">
-              {matches.map((match) => (
+              {matches.map(match => (
                 <tr key={match.id} className="hover:bg-zinc-800/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
-                    {format(match.matchDate, 'dd/MM/yyyy HH:mm')}
+                    {match.matchDate
+                      ? format(match.matchDate, "dd/MM/yyyy HH:mm")
+                      : "—"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
                     {match.category.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                     {match.homeTeam.name} vs {match.awayTeam.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-white">
-                    {match.homeScore ?? '-'} : {match.awayScore ?? '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 text-center font-medium">
-                    {match.round || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                      match.matchStatus === 'LIVE' ? 'bg-red-500/10 text-red-400 ring-red-500/20 animate-pulse' :
-                      match.matchStatus === 'FINISHED' ? 'bg-zinc-500/10 text-zinc-400 ring-zinc-500/20' :
-                      'bg-blue-500/10 text-blue-400 ring-blue-500/20'
-                    }`}>
-                      {match.matchStatus}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {match.status === 'PUBLISHED' ? (
-                      <span className="inline-flex items-center text-emerald-400 text-xs font-medium">
-                        Publicado
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center text-zinc-500 text-xs font-medium">
-                        Borrador
+                    {match.forfeit && (
+                      <span className="ml-2 text-[10px] font-bold bg-orange-500/10 border border-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full">
+                        FORFEIT
                       </span>
                     )}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-white">
+                    {match.homeScore ?? "—"} : {match.awayScore ?? "—"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400 text-center">
+                    {match.round || "—"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${match.matchStatus === "LIVE"
+                          ? "bg-red-500/10 text-red-400 ring-red-500/20 animate-pulse"
+                          : match.matchStatus === "FINISHED"
+                            ? "bg-zinc-500/10 text-zinc-400 ring-zinc-500/20"
+                            : "bg-blue-500/10 text-blue-400 ring-blue-500/20"
+                        }`}
+                    >
+                      {match.matchStatus === "LIVE" ? "En Vivo" :
+                        match.matchStatus === "FINISHED" ? "Finalizado" :
+                          match.matchStatus === "POSTPONED" ? "Pospuesto" : "Programado"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    {match.status === "PUBLISHED" ? (
+                      <span className="text-emerald-400 text-xs font-medium">Publicado</span>
+                    ) : (
+                      <span className="text-zinc-500 text-xs font-medium">Borrador</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-3 items-center">
-                      <Link href={`/admin/partidos/${match.id}/editar`} className="text-blue-400 hover:text-blue-300">
+                    <div className="flex justify-end space-x-2 items-center">
+                      {/* Botón Vocalía — solo para partidos publicados */}
+                      {match.status === "PUBLISHED" && (
+                        <Link
+                          href={`/admin/partidos/${match.id}/vocalia`}
+                          className="relative text-purple-400 hover:text-purple-300 transition-colors"
+                          title="Informe de Vocalía"
+                        >
+                          <FileText className="w-4 h-4" />
+                          {match._count.events > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-purple-500 rounded-full text-[8px] font-black text-white flex items-center justify-center">
+                              {match._count.events}
+                            </span>
+                          )}
+                        </Link>
+                      )}
+                      <Link
+                        href={`/admin/partidos/${match.id}/editar`}
+                        className="text-blue-400 hover:text-blue-300"
+                        title="Editar"
+                      >
                         <Edit className="w-4 h-4" />
                       </Link>
-                      <form action={async () => {
-                        "use server"
-                        const { deleteMatch } = await import("./actions")
-                        await deleteMatch(match.id)
-                      }}>
-                        <button type="submit" className="text-red-400 hover:text-red-300" title="Eliminar">
+                      <form
+                        action={async () => {
+                          "use server"
+                          const { deleteMatch } = await import("./actions")
+                          await deleteMatch(match.id)
+                        }}
+                      >
+                        <button
+                          type="submit"
+                          className="text-red-400 hover:text-red-300"
+                          title="Eliminar"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </form>
@@ -171,7 +221,10 @@ export default async function PartidosPage({
               ))}
               {matches.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-zinc-500 text-sm">
+                  <td
+                    colSpan={8}
+                    className="px-6 py-12 text-center text-zinc-500 text-sm"
+                  >
                     No se encontraron partidos con los filtros actuales.
                   </td>
                 </tr>
@@ -179,35 +232,32 @@ export default async function PartidosPage({
             </tbody>
           </table>
         </div>
-        
+
         {/* Paginación */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-zinc-800 bg-zinc-900 px-4 py-3 sm:px-6">
-            <div className="flex flex-1 justify-between sm:hidden">
-              <Link href={`?page=${Math.max(1, page - 1)}`} className="relative inline-flex items-center rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700">Anterior</Link>
-              <Link href={`?page=${Math.min(totalPages, page + 1)}`} className="relative ml-3 inline-flex items-center rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700">Siguiente</Link>
-            </div>
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-zinc-400">
-                  Mostrando <span className="font-medium">{skip + 1}</span> a <span className="font-medium">{Math.min(skip + take, total)}</span> de <span className="font-medium">{total}</span> resultados
-                </p>
-              </div>
-              <div>
-                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <Link
-                      key={i + 1}
-                      href={`?page=${i + 1}${categoryId ? `&categoryId=${categoryId}` : ''}${status ? `&status=${status}` : ''}${matchStatus ? `&matchStatus=${matchStatus}` : ''}`}
-                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                        page === i + 1 ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600' : 'text-zinc-300 ring-1 ring-inset ring-zinc-700 hover:bg-zinc-800'
+              <p className="text-sm text-zinc-400">
+                Mostrando{" "}
+                <span className="font-medium">{skip + 1}</span> a{" "}
+                <span className="font-medium">{Math.min(skip + take, total)}</span> de{" "}
+                <span className="font-medium">{total}</span> resultados
+              </p>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <Link
+                    key={i + 1}
+                    href={`?page=${i + 1}${categoryId ? `&categoryId=${categoryId}` : ""}${status ? `&status=${status}` : ""
+                      }${matchStatus ? `&matchStatus=${matchStatus}` : ""}`}
+                    className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${page === i + 1
+                        ? "z-10 bg-blue-600 text-white"
+                        : "text-zinc-300 ring-1 ring-inset ring-zinc-700 hover:bg-zinc-800"
                       }`}
-                    >
-                      {i + 1}
-                    </Link>
-                  ))}
-                </nav>
-              </div>
+                  >
+                    {i + 1}
+                  </Link>
+                ))}
+              </nav>
             </div>
           </div>
         )}

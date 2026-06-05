@@ -56,7 +56,7 @@ export default async function EquiposPage({
       <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl flex flex-wrap gap-4 items-end">
         <form className="flex flex-wrap gap-4 flex-1">
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1">Categoría</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-1">Competición</label>
             <select name="categoryId" defaultValue={categoryId || ""} className="bg-zinc-800 border-zinc-700 rounded-md text-sm text-white px-3 py-2">
               <option value="">Todas</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -83,7 +83,7 @@ export default async function EquiposPage({
             <thead className="bg-zinc-950/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Equipo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Categoría</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Competición</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">Ciudad</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase tracking-wider">Partidos</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-zinc-400 uppercase tracking-wider">Visibilidad</th>

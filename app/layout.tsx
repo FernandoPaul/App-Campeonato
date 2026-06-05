@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Campeonato - Portal Oficial",
-  description: "Consulta categorías, partidos, clasificaciones y resultados del campeonato.",
+  description: "Consulta competiciones, partidos, clasificaciones y resultados del campeonato.",
 };
 
 export default function RootLayout({

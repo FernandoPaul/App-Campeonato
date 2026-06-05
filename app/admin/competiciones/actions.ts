@@ -7,7 +7,7 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 import { Status } from "@prisma/client"
 
-const CategorySchema = z.object({
+const CompetitionSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   slug: z.string().min(2, "El slug debe tener al menos 2 caracteres").regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones"),
   sport: z.string().min(2, "El deporte debe tener al menos 2 caracteres"),
@@ -20,10 +20,10 @@ export async function createCategory(prevState: any, formData: FormData) {
   if (!session) return { error: "No autorizado" }
 
   const data = Object.fromEntries(formData.entries())
-  const validatedFields = CategorySchema.safeParse(data)
+  const validatedFields = CompetitionSchema.safeParse(data)
 
   if (!validatedFields.success) {
-    return { error: validatedFields.error.errors[0].message }
+    return { error: (validatedFields.error as any).errors[0].message }
   }
 
   try {
@@ -37,12 +37,12 @@ export async function createCategory(prevState: any, formData: FormData) {
     if (error.code === 'P2002') {
       return { error: "El slug ya está en uso" }
     }
-    return { error: "Error al crear la categoría" }
+    return { error: "Error al crear la competición" }
   }
 
-  revalidatePath("/admin/categorias")
+  revalidatePath("/admin/competiciones")
   revalidatePath("/")
-  redirect("/admin/categorias")
+  redirect("/admin/competiciones")
 }
 
 export async function updateCategory(id: string, prevState: any, formData: FormData) {
@@ -50,10 +50,10 @@ export async function updateCategory(id: string, prevState: any, formData: FormD
   if (!session) return { error: "No autorizado" }
 
   const data = Object.fromEntries(formData.entries())
-  const validatedFields = CategorySchema.safeParse(data)
+  const validatedFields = CompetitionSchema.safeParse(data)
 
   if (!validatedFields.success) {
-    return { error: validatedFields.error.errors[0].message }
+    return { error: (validatedFields.error as any).errors[0].message }
   }
 
   try {
@@ -68,13 +68,13 @@ export async function updateCategory(id: string, prevState: any, formData: FormD
     if (error.code === 'P2002') {
       return { error: "El slug ya está en uso" }
     }
-    return { error: "Error al actualizar la categoría" }
+    return { error: "Error al actualizar la competición" }
   }
 
-  revalidatePath("/admin/categorias")
+  revalidatePath("/admin/competiciones")
   revalidatePath(`/${validatedFields.data.slug}`)
   revalidatePath("/")
-  redirect("/admin/categorias")
+  redirect("/admin/competiciones")
 }
 
 export async function toggleCategoryStatus(id: string, currentStatus: Status) {
@@ -88,7 +88,7 @@ export async function toggleCategoryStatus(id: string, currentStatus: Status) {
     data: { status: newStatus }
   })
 
-  revalidatePath("/admin/categorias")
+  revalidatePath("/admin/competiciones")
   revalidatePath("/")
 }
 
@@ -100,9 +100,9 @@ export async function deleteCategory(id: string) {
     await prisma.category.delete({
       where: { id }
     })
-    revalidatePath("/admin/categorias")
+    revalidatePath("/admin/competiciones")
     revalidatePath("/")
   } catch (error) {
-    throw new Error("No se puede eliminar la categoría porque tiene equipos o partidos asociados")
+    throw new Error("No se puede eliminar la competición porque tiene equipos o partidos asociados")
   }
 }

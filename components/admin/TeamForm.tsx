@@ -40,7 +40,7 @@ export default function TeamForm({ categories, initialData }: TeamFormProps) {
               {isEditing ? "Editar Equipo" : "Nuevo Equipo"}
             </h2>
             <p className="text-zinc-400">
-              {isEditing ? "Actualiza los datos del equipo" : "Registra un nuevo equipo en una categoría"}
+              {isEditing ? "Actualiza los datos del equipo" : "Registra un nuevo equipo"}
             </p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default function TeamForm({ categories, initialData }: TeamFormProps) {
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label htmlFor="categoryId" className="block text-sm font-medium text-zinc-300">Categoría *</label>
+            <label htmlFor="categoryId" className="block text-sm font-medium text-zinc-300">Competición *</label>
             <select
               id="categoryId"
               name="categoryId"
@@ -63,7 +63,7 @@ export default function TeamForm({ categories, initialData }: TeamFormProps) {
               required
               className="mt-2 block w-full rounded-md bg-zinc-800 border-zinc-700 text-white focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2"
             >
-              <option value="" disabled>Selecciona una categoría</option>
+              <option value="" disabled>Selecciona una competición</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
